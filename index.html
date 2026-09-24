@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Symulacja Zupy Prebiotycznej - Dawkins</title>
+    <title>Pierwotna Zupa Dawkinsa - Poprawiona Symulacja 2D</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -23,25 +23,15 @@
             align-items: center;
         }
 
-        h1 {
-            margin-bottom: 5px;
-            color: var(--accent-color);
-            font-size: 1.8rem;
-        }
-
-        p.subtitle {
-            margin-top: 0;
-            color: #94a3b8;
-            font-size: 0.95rem;
-            margin-bottom: 20px;
-        }
+        h1 { margin-bottom: 5px; color: var(--accent-color); font-size: 1.8rem; }
+        p.subtitle { margin-top: 0; color: #94a3b8; font-size: 0.95rem; margin-bottom: 20px; }
 
         .container {
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
             justify-content: center;
-            max-width: 1200px;
+            max-width: 1300px;
             width: 100%;
         }
 
@@ -54,11 +44,11 @@
         }
 
         .controls {
-            flex: 1 1 280px;
-            max-width: 320px;
+            flex: 1 1 300px;
+            max-width: 340px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
         }
 
         .simulation-view {
@@ -75,38 +65,28 @@
             gap: 15px;
         }
 
-        canvas {
-            border-radius: 8px;
-            background-color: #020617;
-        }
+        canvas { border-radius: 8px; background-color: #020617; }
 
         .control-group {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 3px;
         }
 
         label {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: #cbd5e1;
             display: flex;
             justify-content: space-between;
         }
 
-        input[type="range"] {
-            width: 100%;
-            accent-color: var(--accent-color);
-        }
+        input[type="range"] { width: 100%; accent-color: var(--accent-color); }
 
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
+        .btn-group { display: flex; gap: 10px; margin-top: 5px; }
 
         button {
             flex: 1;
-            padding: 10px;
+            padding: 8px;
             border: none;
             border-radius: 6px;
             font-weight: bold;
@@ -114,59 +94,35 @@
             transition: all 0.2s;
         }
 
-        .btn-primary {
-            background-color: #0284c7;
-            color: white;
-        }
+        .btn-primary { background-color: #0284c7; color: white; }
         .btn-primary:hover { background-color: #0369a1; }
-
-        .btn-danger {
-            background-color: #e11d48;
-            color: white;
-        }
+        .btn-danger { background-color: #e11d48; color: white; }
         .btn-danger:hover { background-color: #be123c; }
 
-        .legend {
-            display: flex;
-            gap: 12px;
-            font-size: 0.8rem;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
+        .legend { display: flex; gap: 10px; font-size: 0.75rem; margin-top: 8px; flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; gap: 4px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
 
         .stats-badge {
             background-color: #090d16;
-            padding: 8px 12px;
+            padding: 6px 10px;
             border-radius: 6px;
             font-family: monospace;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             display: flex;
             justify-content: space-between;
-            margin-bottom: 5px;
         }
     </style>
 </head>
 <body>
 
-    <h1>Pierwotna Zupa Dawkinsa - Symulacja 2D</h1>
-    <p class="subtitle">Modelowanie ewolucji replikatorów, drapieżnictwa i osłon ochronnych</p>
+    <h1>Pierwotna Zupa Dawkinsa - Poprawiona Symulacja 2D</h1>
+    <p class="subtitle">Poprawiona fizyka, rozdzielona pętla fazowa oraz sterowanie ewolucją genomu</p>
 
     <div class="container">
-        <!-- Panel sterowania -->
+        <!-- Panel Sterowania -->
         <div class="card controls">
-            <h3 style="margin-top:0;">Parametry Symulacji</h3>
+            <h3 style="margin-top:0; margin-bottom:5px;">Parametry Symulacji</h3>
 
             <div class="control-group">
                 <label>Tempo mutacji ($p_{mut}$): <span id="val-mut">5%</span></label>
@@ -174,8 +130,28 @@
             </div>
 
             <div class="control-group">
-                <label>Dopływ energii (monomerów): <span id="val-inflow">25</span></label>
-                <input type="range" id="param-inflow" min="5" max="80" step="5" value="25">
+                <label>Dopływ energii (monomerów): <span id="val-inflow">30</span></label>
+                <input type="range" id="param-inflow" min="5" max="100" step="5" value="30">
+            </div>
+
+            <div class="control-group">
+                <label>Efektywność enzymu (Bonus długości): <span id="val-enzyme">0.3</span></label>
+                <input type="range" id="param-enzyme" min="0.0" max="1.0" step="0.05" value="0.3">
+            </div>
+
+            <div class="control-group">
+                <label>Próg drapieżnika (Min długość): <span id="val-pred-len">4 bit</span></label>
+                <input type="range" id="param-pred-len" min="3" max="8" step="1" value="4">
+            </div>
+
+            <div class="control-group">
+                <label>Narzut pancerza (Armor cost): <span id="val-armor-cost">0.2</span></label>
+                <input type="range" id="param-armor-cost" min="0.0" max="1.0" step="0.05" value="0.2">
+            </div>
+
+            <div class="control-group">
+                <label>Waga długości replikacji: <span id="val-rep-cost">1.2</span></label>
+                <input type="range" id="param-rep-cost" min="0.5" max="4.0" step="0.1" value="1.2">
             </div>
 
             <div class="control-group">
@@ -188,9 +164,9 @@
                 <button id="btn-reset" class="btn-danger">Restart</button>
             </div>
 
-            <hr style="border-color: #334155; width: 100%; margin: 10px 0;">
+            <hr style="border-color: #334155; width: 100%; margin: 5px 0;">
 
-            <div class="stats-badge"><span>Generacja:</span><span id="stat-step">0</span></div>
+            <div class="stats-badge"><span>Krok symulacji:</span><span id="stat-step">0</span></div>
             <div class="stats-badge"><span>Populacja ogółem:</span><span id="stat-pop">0</span></div>
             <div class="stats-badge"><span>Drapieżniki:</span><span id="stat-pred">0</span></div>
             <div class="stats-badge"><span>Śr. długość genomu:</span><span id="stat-len">0.0</span></div>
@@ -213,11 +189,11 @@
         <div class="card analytics">
             <h3 style="margin-top:0;">Wykresy w Czasie Rzeczywistym</h3>
             <div>
-                <span style="font-size:0.8rem; color:#94a3b8;">Dynamika populacji (Lotka-Volterra)</span>
+                <span style="font-size:0.8rem; color:#94a3b8;">Dynamika Populacji (Lotka-Volterra)</span>
                 <canvas id="chartPop" width="380" height="180"></canvas>
             </div>
             <div>
-                <span style="font-size:0.8rem; color:#94a3b8;">Złożoność i Entropia Shannona</span>
+                <span style="font-size:0.8rem; color:#94a3b8;">Sekwencyjna Entropia Shannona i Śr. Długość</span>
                 <canvas id="chartEntropy" width="380" height="180"></canvas>
             </div>
         </div>
@@ -230,9 +206,13 @@
         let isRunning = true;
         let stepCount = 0;
 
-        // Parametry
+        // Parametry z suwaków
         let pMut = 0.05;
-        let inflow = 25;
+        let inflow = 30;
+        let enzymeEfficiency = 0.3;
+        let predMinLen = 4;
+        let armorCostParam = 0.2;
+        let repCostWeight = 1.2;
         let stepsPerFrame = 3;
 
         // Stan środowiska
@@ -247,9 +227,9 @@
         let historyLen = [];
         let historyEntropy = [];
 
-        // --- KLASA REPLIKATORA (Praktykantka A) ---
+        // --- KLASA REPLIKATORA ---
         class Replicator {
-            constructor(x, y, genome = null, energy = 20) {
+            constructor(x, y, genome = null, energy = 25) {
                 this.x = x;
                 this.y = y;
                 this.energy = energy;
@@ -264,8 +244,8 @@
 
             get length() { return this.genome.length; }
 
-            get isPredator() {
-                if (this.length < 6) return false;
+            isPredator(minLen) {
+                if (this.length < minLen) return false;
                 let ones = 0;
                 for (let b of this.genome) ones += b;
                 return ones > (this.length / 2);
@@ -275,11 +255,22 @@
                 return this.length >= 4 && this.genome[0] === 0 && this.genome[1] === 0;
             }
 
-            get metabolicCost() {
-                let cost = 0.5 + (this.length * 0.1);
-                if (this.hasArmor) cost += 0.8;
-                if (this.isPredator) cost += 0.5;
+            metabolicCost(armorCost, minPredLen) {
+                let cost = 0.4 + (this.length * 0.08);
+                if (this.hasArmor) cost += armorCost;
+                if (this.isPredator(minPredLen)) cost += 0.3;
                 return cost;
+            }
+
+            // Odległość Hamminga + karanie za różnicę długości
+            hammingDistance(other) {
+                let minL = Math.min(this.length, other.length);
+                let dist = 0;
+                for (let i = 0; i < minL; i++) {
+                    if (this.genome[i] !== other.genome[i]) dist++;
+                }
+                dist += Math.abs(this.length - other.length);
+                return dist;
             }
 
             mutate(rate) {
@@ -290,7 +281,7 @@
                     if (Math.random() < rate) newG[i] = 1 - newG[i];
                 }
                 // Insercja
-                if (Math.random() < rate && newG.length < 15) {
+                if (Math.random() < rate && newG.length < 18) {
                     newG.push(Math.random() < 0.5 ? 0 : 1);
                 }
                 // Delecja
@@ -302,34 +293,32 @@
             }
         }
 
-        // --- INICJALIZACJA SYSTEMU ---
+        // --- INICJALIZACJA ---
         function initSimulation() {
             stepCount = 0;
             replicators = [];
             grid = Array.from({ length: GRID_SIZE }, () => new Float32Array(GRID_SIZE));
 
-            // Zasilenie monomerami
-            for (let i = 0; i < 1000; i++) {
+            for (let i = 0; i < 1200; i++) {
                 let rx = Math.floor(Math.random() * GRID_SIZE);
                 let ry = Math.floor(Math.random() * GRID_SIZE);
                 grid[rx][ry]++;
             }
 
-            // Pierwotne cząsteczki
-            for (let i = 0; i < 20; i++) {
+            for (let i = 0; i < 25; i++) {
                 let rx = Math.floor(Math.random() * GRID_SIZE);
                 let ry = Math.floor(Math.random() * GRID_SIZE);
-                replicators.push(new Replicator(rx, ry, null, 25));
+                replicators.push(new Replicator(rx, ry, null, 30));
             }
 
             historySteps = []; historyPop = []; historyPred = []; historyLen = []; historyEntropy = [];
         }
 
-        // --- PĘTLA SYMULACYJNA (Praktykantka B) ---
+        // --- POPRAWIONA PĘTLA SYMULACYJNA (Trójfazowa) ---
         function simulationStep() {
             stepCount++;
 
-            // 1. Dopływ energii z zewnątrz
+            // Dopływ monomerów
             for (let i = 0; i < inflow; i++) {
                 let rx = Math.floor(Math.random() * GRID_SIZE);
                 let ry = Math.floor(Math.random() * GRID_SIZE);
@@ -339,39 +328,44 @@
             let dead = new Set();
             let newReps = [];
 
-            // Mapa przestrzenna dla sprawnych kolizji
-            let spatialMap = new Map();
+            // FAZA 1: Metabolizm, Ruch i Odżywianie
             for (let r of replicators) {
+                r.energy -= r.metabolicCost(armorCostParam, predMinLen);
+                if (r.energy <= 0) {
+                    dead.add(r);
+                    grid[r.x][r.y] += (r.length * 1.2);
+                    continue;
+                }
+
+                // Ruch na torusie
+                r.x = (r.x + Math.floor(Math.random() * 3) - 1 + GRID_SIZE) % GRID_SIZE;
+                r.y = (r.y + Math.floor(Math.random() * 3) - 1 + GRID_SIZE) % GRID_SIZE;
+
+                // Odżywianie (Bonus długości z enzymu)
+                if (grid[r.x][r.y] > 0) {
+                    let maxEat = 1 + Math.floor(r.length * enzymeEfficiency);
+                    let eat = Math.min(maxEat, grid[r.x][r.y]);
+                    r.energy += eat * 2.0;
+                    grid[r.x][r.y] -= eat;
+                }
+            }
+
+            let alive = replicators.filter(r => !dead.has(r));
+
+            // FAZA 2: Budowa zaktualizowanej mapy przestrzennej
+            let spatialMap = new Map();
+            for (let r of alive) {
                 let key = `${r.x},${r.y}`;
                 if (!spatialMap.has(key)) spatialMap.set(key, []);
                 spatialMap.get(key).push(r);
             }
 
-            for (let r of replicators) {
+            // FAZA 3: Interakcje (Drapieżnictwo) i Replikacja
+            for (let r of alive) {
                 if (dead.has(r)) continue;
 
-                // Metabolizm
-                r.energy -= r.metabolicCost;
-                if (r.energy <= 0) {
-                    dead.add(r);
-                    grid[r.x][r.y] += r.length * 1.5;
-                    continue;
-                }
-
-                // Ruch (Torus)
-                r.x = (r.x + Math.floor(Math.random() * 3) - 1 + GRID_SIZE) % GRID_SIZE;
-                r.y = (r.y + Math.floor(Math.random() * 3) - 1 + GRID_SIZE) % GRID_SIZE;
-
-                // Konsumpcja monomerów
-                if (grid[r.x][r.y] > 0) {
-                    let eat = Math.min(3, grid[r.x][r.y]);
-                    r.energy += eat * 2.0;
-                    grid[r.x][r.y] -= eat;
-                }
-
-                // Interakcja drapieżnik-ofiara
-                if (r.isPredator) {
-                    // Sąsiedztwo Moore'a
+                // Drapieżnictwo z Odległością Hamminga
+                if (r.isPredator(predMinLen)) {
                     for (let dx = -1; dx <= 1; dx++) {
                         for (let dy = -1; dy <= 1; dy++) {
                             let nx = (r.x + dx + GRID_SIZE) % GRID_SIZE;
@@ -381,14 +375,11 @@
                             if (neighbors) {
                                 for (let prey of neighbors) {
                                     if (prey !== r && !dead.has(prey) && !prey.hasArmor) {
-                                        // Iloczyn skalarny do wyznaczenia "odległości genetycznej"
-                                        let minL = Math.min(r.length, prey.length);
-                                        let dot = 0;
-                                        for (let k = 0; k < minL; k++) dot += r.genome[k] * prey.genome[k];
-
-                                        if (dot < minL / 2) {
+                                        let dist = r.hammingDistance(prey);
+                                        // Polowanie tylko gdy osobniki są genetycznie odmienne (brak auto-kanibalizmu klonów)
+                                        if (dist > 0) {
                                             dead.add(prey);
-                                            r.energy += prey.length * 3.0;
+                                            r.energy += prey.length * 2.2;
                                             break;
                                         }
                                     }
@@ -399,25 +390,24 @@
                 }
 
                 // Podział / Replikacja
-                let repCost = r.length * 3.0;
-                if (r.energy > repCost * 1.5) {
+                let repCost = r.length * repCostWeight * 2.2;
+                if (r.energy > repCost * 1.4) {
                     r.energy -= repCost;
                     let mutG = r.mutate(pMut);
-                    newReps.push(new Replicator(r.x, r.y, mutG, repCost));
+                    newReps.push(new Replicator(r.x, r.y, mutG, repCost * 0.7));
                 }
             }
 
-            // Filtrowanie żywych i dodanie potomków
-            replicators = replicators.filter(r => !dead.has(r)).concat(newReps);
+            replicators = alive.filter(r => !dead.has(r)).concat(newReps);
 
-            // Zbieranie statystyk
             if (stepCount % 2 === 0) collectMetrics();
         }
 
+        // --- ZBIERANIE METRYK (Genotypowa Entropia Shannona) ---
         function collectMetrics() {
             historySteps.push(stepCount);
             let total = replicators.length;
-            let preds = replicators.filter(r => r.isPredator).length;
+            let preds = replicators.filter(r => r.isPredator(predMinLen)).length;
             historyPop.push(total);
             historyPred.push(preds);
 
@@ -425,12 +415,15 @@
                 let sumLen = replicators.reduce((a, b) => a + b.length, 0);
                 historyLen.push(sumLen / total);
 
-                // Entropia Shannona (dla różnorodności długości genomu)
+                // Entropia Shannona po pełnych sekwencjach bitowych
                 let counts = {};
-                for (let r of replicators) counts[r.length] = (counts[r.length] || 0) + 1;
+                for (let r of replicators) {
+                    let seq = r.genome.join('');
+                    counts[seq] = (counts[seq] || 0) + 1;
+                }
                 let entropy = 0;
-                for (let len in counts) {
-                    let p = counts[len] / total;
+                for (let seq in counts) {
+                    let p = counts[seq] / total;
                     entropy -= p * Math.log2(p);
                 }
                 historyEntropy.push(entropy);
@@ -452,7 +445,6 @@
         function drawGrid() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // 1. Rysowanie Zupy (Monomerów)
             for (let x = 0; x < GRID_SIZE; x++) {
                 for (let y = 0; y < GRID_SIZE; y++) {
                     if (grid[x][y] > 0) {
@@ -463,15 +455,14 @@
                 }
             }
 
-            // 2. Rysowanie Replikatorów
             for (let r of replicators) {
                 ctx.beginPath();
-                let radius = Math.max(2, Math.min(CELL_SIZE / 2, r.length));
+                let radius = Math.max(2, Math.min(CELL_SIZE / 2, r.length * 0.9));
                 ctx.arc((r.x + 0.5) * CELL_SIZE, (r.y + 0.5) * CELL_SIZE, radius, 0, Math.PI * 2);
 
-                if (r.isPredator) ctx.fillStyle = '#ef4444';      // Czerwony
-                else if (r.hasArmor) ctx.fillStyle = '#22c55e';   // Zielony
-                else ctx.fillStyle = '#f8fafc';                   // Biały
+                if (r.isPredator(predMinLen)) ctx.fillStyle = '#ef4444';
+                else if (r.hasArmor) ctx.fillStyle = '#22c55e';
+                else ctx.fillStyle = '#f8fafc';
 
                 ctx.fill();
                 ctx.strokeStyle = '#000';
@@ -480,8 +471,8 @@
             }
         }
 
-        // Prosty silnik rysowania wykresów
-        function drawChart(canvasId, dataSeries, colors, labels) {
+        // Poprawiony silnik rysowania wykresów (skalowanie po dynamicznej długości)
+        function drawChart(canvasId, dataSeries, colors) {
             const c = document.getElementById(canvasId);
             const cx = c.getContext('2d');
             cx.clearRect(0, 0, c.width, c.height);
@@ -494,7 +485,6 @@
                 if (m > maxVal) maxVal = m;
             }
 
-            // Rysowanie siatki
             cx.strokeStyle = '#334155';
             cx.lineWidth = 0.5;
             for (let i = 0; i <= 4; i++) {
@@ -502,14 +492,15 @@
                 cx.beginPath(); cx.moveTo(0, y); cx.lineTo(c.width, y); cx.stroke();
             }
 
-            // Rysowanie serii danych
+            let div = Math.max(1, historySteps.length - 1);
+
             dataSeries.forEach((series, idx) => {
                 cx.beginPath();
                 cx.strokeStyle = colors[idx];
                 cx.lineWidth = 1.8;
 
                 for (let i = 0; i < series.length; i++) {
-                    let x = (i / (maxHistory - 1)) * c.width;
+                    let x = (i / div) * c.width;
                     let y = c.height - ((series[i] / maxVal) * (c.height - 20)) - 10;
                     if (i === 0) cx.moveTo(x, y);
                     else cx.lineTo(x, y);
@@ -521,7 +512,7 @@
         function updateUI() {
             document.getElementById('stat-step').innerText = stepCount;
             document.getElementById('stat-pop').innerText = replicators.length;
-            document.getElementById('stat-pred').innerText = replicators.filter(r => r.isPredator).length;
+            document.getElementById('stat-pred').innerText = replicators.filter(r => r.isPredator(predMinLen)).length;
             
             let avgL = replicators.length > 0 ? (replicators.reduce((a, b) => a + b.length, 0) / replicators.length).toFixed(1) : 0;
             document.getElementById('stat-len').innerText = avgL;
@@ -531,7 +522,6 @@
             drawChart('chartEntropy', [historyEntropy, historyLen], ['#a855f7', '#f97316']);
         }
 
-        // --- GŁÓWNA PĘTLA APLIKACJI ---
         function loop() {
             if (isRunning) {
                 for (let i = 0; i < stepsPerFrame; i++) {
@@ -542,7 +532,7 @@
             requestAnimationFrame(loop);
         }
 
-        // --- PODPIĘCIE INTERFEJSU (SLIDERY) ---
+        // --- BINDING SUWAKÓW ---
         document.getElementById('param-mut').addEventListener('input', (e) => {
             pMut = parseFloat(e.target.value);
             document.getElementById('val-mut').innerText = Math.round(pMut * 100) + '%';
@@ -553,21 +543,34 @@
             document.getElementById('val-inflow').innerText = inflow;
         });
 
+        document.getElementById('param-enzyme').addEventListener('input', (e) => {
+            enzymeEfficiency = parseFloat(e.target.value);
+            document.getElementById('val-enzyme').innerText = enzymeEfficiency;
+        });
+
+        document.getElementById('param-pred-len').addEventListener('input', (e) => {
+            predMinLen = parseInt(e.target.value);
+            document.getElementById('val-pred-len').innerText = predMinLen + ' bit';
+        });
+
+        document.getElementById('param-armor-cost').addEventListener('input', (e) => {
+            armorCostParam = parseFloat(e.target.value);
+            document.getElementById('val-armor-cost').innerText = armorCostParam;
+        });
+
+        document.getElementById('param-rep-cost').addEventListener('input', (e) => {
+            repCostWeight = parseFloat(e.target.value);
+            document.getElementById('val-rep-cost').innerText = repCostWeight;
+        });
+
         document.getElementById('param-speed').addEventListener('input', (e) => {
             stepsPerFrame = parseInt(e.target.value);
             document.getElementById('val-speed').innerText = stepsPerFrame + 'x';
         });
 
-        document.getElementById('btn-toggle').addEventListener('click', () => {
-            isRunning = !isRunning;
-        });
+        document.getElementById('btn-toggle').addEventListener('click', () => { isRunning = !isRunning; });
+        document.getElementById('btn-reset').addEventListener('click', () => { initSimulation(); updateUI(); });
 
-        document.getElementById('btn-reset').addEventListener('click', () => {
-            initSimulation();
-            updateUI();
-        });
-
-        // Start
         initSimulation();
         loop();
     </script>
