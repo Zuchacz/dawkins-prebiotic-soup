@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Symulacja Zupy Prebiotycznej - Dawkins</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --text-color: #f8fafc;
+            --accent-color: #38bdf8;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+            color: var(--accent-color);
+            font-size: 1.8rem;
+        }
+
+        p.subtitle {
+            margin-top: 0;
+            color: #94a3b8;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .card {
+            background-color: var(--panel-bg);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            border: 1px solid #334155;
+        }
+
+        .controls {
+            flex: 1 1 280px;
+            max-width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .simulation-view {
+            flex: 0 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .analytics {
+            flex: 1 1 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        canvas {
+            border-radius: 8px;
+            background-color: #020617;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent-color);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #0284c7;
+            color: white;
+        }
+        .btn-primary:hover { background-color: #0369a1; }
+
+        .btn-danger {
+            background-color: #e11d48;
+            color: white;
+        }
+        .btn-danger:hover { background-color: #be123c; }
+
+        .legend {
+            display: flex;
+            gap: 12px;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .stats-badge {
+            background-color: #090d16;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Pierwotna Zupa Dawkinsa - Symulacja 2D</h1>
+    <p class="subtitle">Modelowanie ewolucji replikatorów, drapieżnictwa i osłon ochronnych</p>
+
+    <div class="container">
+        <!-- Panel sterowania -->
+        <div class="card controls">
+            <h3 style="margin-top:0;">Parametry Symulacji</h3>
+
+            <div class="control-group">
+                <label>Tempo mutacji ($p_{mut}$): <span id="val-mut">5%</span></label>
+                <input type="range" id="param-mut" min="0" max="0.2" step="0.01" value="0.05">
+            </div>
+
+            <div class="control-group">
+                <label>Dopływ energii (monomerów): <span id="val-inflow">25</span></label>
+                <input type="range" id="param-inflow" min="5" max="80" step="5" value="25">
+            </div>
+
+            <div class="control-group">
+                <label>Szybkość animacji: <span id="val-speed">3x</span></label>
+                <input type="range" id="param-speed" min="1" max="10" step="1" value="3">
+            </div>
+
+            <div class="btn-group">
+                <button id="btn-toggle" class="btn-primary">Pauza / Start</button>
+                <button id="btn-reset" class="btn-danger">Restart</button>
+            </div>
+
+            <hr style="border-color: #334155; width: 100%; margin: 10px 0;">
+
+            <div class="stats-badge"><span>Generacja:</span><span id="stat-step">0</span></div>
+            <div class="stats-badge"><span>Populacja ogółem:</span><span id="stat-pop">0</span></div>
+            <div class="stats-badge"><span>Drapieżniki:</span><span id="stat-pred">0</span></div>
+            <div class="stats-badge"><span>Śr. długość genomu:</span><span id="stat-len">0.0</span></div>
+
+            <div class="legend">
+                <div class="legend-item"><div class="dot" style="background:#0284c7;"></div>Monomery</div>
+                <div class="legend-item"><div class="dot" style="background:#f8fafc;"></div>Zwykły</div>
+                <div class="legend-item"><div class="dot" style="background:#22c55e;"></div>Pancerz</div>
+                <div class="legend-item"><div class="dot" style="background:#ef4444;"></div>Drapieżnik</div>
+            </div>
+        </div>
+
+        <!-- Widok Siatki -->
+        <div class="card simulation-view">
+            <h3 style="margin-top:0; width:100%;">Siatka 2D ($50 \times 50$)</h3>
+            <canvas id="gridCanvas" width="450" height="450"></canvas>
+        </div>
+
+        <!-- Analityka i Wykresy -->
+        <div class="card analytics">
+            <h3 style="margin-top:0;">Wykresy w Czasie Rzeczywistym</h3>
+            <div>
+                <span style="font-size:0.8rem; color:#94a3b8;">Dynamika populacji (Lotka-Volterra)</span>
+                <canvas id="chartPop" width="380" height="180"></canvas>
+            </div>
+            <div>
+                <span style="font-size:0.8rem; color:#94a3b8;">Złożoność i Entropia Shannona</span>
+                <canvas id="chartEntropy" width="380" height="180"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- USTAWIENIA I ZMIENNE GLOBALNE ---
+        const GRID_SIZE = 50;
+        const CELL_SIZE = 450 / GRID_SIZE;
+        let isRunning = true;
+        let stepCount = 0;
+
+        // Parametry
+        let pMut = 0.05;
+        let inflow = 25;
+        let stepsPerFrame = 3;
+
+        // Stan środowiska
+        let grid = Array.from({ length: GRID_SIZE }, () => new Float32Array(GRID_SIZE));
+        let replicators = [];
+
+        // Historia metryk
+        const maxHistory = 150;
+        let historySteps = [];
+        let historyPop = [];
+        let historyPred = [];
+        let historyLen = [];
+        let historyEntropy = [];
+
+        // --- KLASA REPLIKATORA (Praktykantka A) ---
+        class Replicator {
+            constructor(x, y, genome = null, energy = 20) {
+                this.x = x;
+                this.y = y;
+                this.energy = energy;
+                if (genome) {
+                    this.genome = new Uint8Array(genome);
+                } else {
+                    const len = Math.floor(Math.random() * 3) + 3;
+                    this.genome = new Uint8Array(len);
+                    for (let i = 0; i < len; i++) this.genome[i] = Math.random() < 0.5 ? 0 : 1;
+                }
+            }
+
+            get length() { return this.genome.length; }
+
+            get isPredator() {
+                if (this.length < 6) return false;
+                let ones = 0;
+                for (let b of this.genome) ones += b;
+                return ones > (this.length / 2);
+            }
+
+            get hasArmor() {
+                return this.length >= 4 && this.genome[0] === 0 && this.genome[1] === 0;
+            }
+
+            get metabolicCost() {
+                let cost = 0.5 + (this.length * 0.1);
+                if (this.hasArmor) cost += 0.8;
+                if (this.isPredator) cost += 0.5;
+                return cost;
+            }
+
+            mutate(rate) {
+                let newG = Array.from(this.genome);
+                
+                // Mutacja punktowa
+                for (let i = 0; i < newG.length; i++) {
+                    if (Math.random() < rate) newG[i] = 1 - newG[i];
+                }
+                // Insercja
+                if (Math.random() < rate && newG.length < 15) {
+                    newG.push(Math.random() < 0.5 ? 0 : 1);
+                }
+                // Delecja
+                if (Math.random() < rate && newG.length > 2) {
+                    const idx = Math.floor(Math.random() * newG.length);
+                    newG.splice(idx, 1);
+                }
+                return newG;
+            }
+        }
+
+        // --- INICJALIZACJA SYSTEMU ---
+        function initSimulation() {
+            stepCount = 0;
+            replicators = [];
+            grid = Array.from({ length: GRID_SIZE }, () => new Float32Array(GRID_SIZE));
+
+            // Zasilenie monomerami
+            for (let i = 0; i < 1000; i++) {
+                let rx = Math.floor(Math.random() * GRID_SIZE);
+                let ry = Math.floor(Math.random() * GRID_SIZE);
+                grid[rx][ry]++;
+            }
+
+            // Pierwotne cząsteczki
+            for (let i = 0; i < 20; i++) {
+                let rx = Math.floor(Math.random() * GRID_SIZE);
+                let ry = Math.floor(Math.random() * GRID_SIZE);
+                replicators.push(new Replicator(rx, ry, null, 25));
+            }
+
+            historySteps = []; historyPop = []; historyPred = []; historyLen = []; historyEntropy = [];
+        }
+
+        // --- PĘTLA SYMULACYJNA (Praktykantka B) ---
+        function simulationStep() {
+            stepCount++;
+
+            // 1. Dopływ energii z zewnątrz
+            for (let i = 0; i < inflow; i++) {
+                let rx = Math.floor(Math.random() * GRID_SIZE);
+                let ry = Math.floor(Math.random() * GRID_SIZE);
+                grid[rx][ry]++;
+            }
+
+            let dead = new Set();
+            let newReps = [];
+
+            // Mapa przestrzenna dla sprawnych kolizji
+            let spatialMap = new Map();
+            for (let r of replicators) {
+                let key = `${r.x},${r.y}`;
+                if (!spatialMap.has(key)) spatialMap.set(key, []);
+                spatialMap.get(key).push(r);
+            }
+
+            for (let r of replicators) {
+                if (dead.has(r)) continue;
+
+                // Metabolizm
+                r.energy -= r.metabolicCost;
+                if (r.energy <= 0) {
+                    dead.add(r);
+                    grid[r.x][r.y] += r.length * 1.5;
+                    continue;
+                }
+
+                // Ruch (Torus)
+                r.x = (r.x + Math.floor(Math.random() * 3) - 1 + GRID_SIZE) % GRID_SIZE;
+                r.y = (r.y + Math.floor(Math.random() * 3) - 1 + GRID_SIZE) % GRID_SIZE;
+
+                // Konsumpcja monomerów
+                if (grid[r.x][r.y] > 0) {
+                    let eat = Math.min(3, grid[r.x][r.y]);
+                    r.energy += eat * 2.0;
+                    grid[r.x][r.y] -= eat;
+                }
+
+                // Interakcja drapieżnik-ofiara
+                if (r.isPredator) {
+                    // Sąsiedztwo Moore'a
+                    for (let dx = -1; dx <= 1; dx++) {
+                        for (let dy = -1; dy <= 1; dy++) {
+                            let nx = (r.x + dx + GRID_SIZE) % GRID_SIZE;
+                            let ny = (r.y + dy + GRID_SIZE) % GRID_SIZE;
+                            let neighbors = spatialMap.get(`${nx},${ny}`);
+
+                            if (neighbors) {
+                                for (let prey of neighbors) {
+                                    if (prey !== r && !dead.has(prey) && !prey.hasArmor) {
+                                        // Iloczyn skalarny do wyznaczenia "odległości genetycznej"
+                                        let minL = Math.min(r.length, prey.length);
+                                        let dot = 0;
+                                        for (let k = 0; k < minL; k++) dot += r.genome[k] * prey.genome[k];
+
+                                        if (dot < minL / 2) {
+                                            dead.add(prey);
+                                            r.energy += prey.length * 3.0;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Podział / Replikacja
+                let repCost = r.length * 3.0;
+                if (r.energy > repCost * 1.5) {
+                    r.energy -= repCost;
+                    let mutG = r.mutate(pMut);
+                    newReps.push(new Replicator(r.x, r.y, mutG, repCost));
+                }
+            }
+
+            // Filtrowanie żywych i dodanie potomków
+            replicators = replicators.filter(r => !dead.has(r)).concat(newReps);
+
+            // Zbieranie statystyk
+            if (stepCount % 2 === 0) collectMetrics();
+        }
+
+        function collectMetrics() {
+            historySteps.push(stepCount);
+            let total = replicators.length;
+            let preds = replicators.filter(r => r.isPredator).length;
+            historyPop.push(total);
+            historyPred.push(preds);
+
+            if (total > 0) {
+                let sumLen = replicators.reduce((a, b) => a + b.length, 0);
+                historyLen.push(sumLen / total);
+
+                // Entropia Shannona (dla różnorodności długości genomu)
+                let counts = {};
+                for (let r of replicators) counts[r.length] = (counts[r.length] || 0) + 1;
+                let entropy = 0;
+                for (let len in counts) {
+                    let p = counts[len] / total;
+                    entropy -= p * Math.log2(p);
+                }
+                historyEntropy.push(entropy);
+            } else {
+                historyLen.push(0);
+                historyEntropy.push(0);
+            }
+
+            if (historySteps.length > maxHistory) {
+                historySteps.shift(); historyPop.shift(); historyPred.shift();
+                historyLen.shift(); historyEntropy.shift();
+            }
+        }
+
+        // --- RYSOWANIE I WIZUALIZACJA ---
+        const canvas = document.getElementById('gridCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function drawGrid() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Rysowanie Zupy (Monomerów)
+            for (let x = 0; x < GRID_SIZE; x++) {
+                for (let y = 0; y < GRID_SIZE; y++) {
+                    if (grid[x][y] > 0) {
+                        let alpha = Math.min(1, grid[x][y] / 10);
+                        ctx.fillStyle = `rgba(2, 132, 199, ${alpha})`;
+                        ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    }
+                }
+            }
+
+            // 2. Rysowanie Replikatorów
+            for (let r of replicators) {
+                ctx.beginPath();
+                let radius = Math.max(2, Math.min(CELL_SIZE / 2, r.length));
+                ctx.arc((r.x + 0.5) * CELL_SIZE, (r.y + 0.5) * CELL_SIZE, radius, 0, Math.PI * 2);
+
+                if (r.isPredator) ctx.fillStyle = '#ef4444';      // Czerwony
+                else if (r.hasArmor) ctx.fillStyle = '#22c55e';   // Zielony
+                else ctx.fillStyle = '#f8fafc';                   // Biały
+
+                ctx.fill();
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 0.5;
+                ctx.stroke();
+            }
+        }
+
+        // Prosty silnik rysowania wykresów
+        function drawChart(canvasId, dataSeries, colors, labels) {
+            const c = document.getElementById(canvasId);
+            const cx = c.getContext('2d');
+            cx.clearRect(0, 0, c.width, c.height);
+
+            if (historySteps.length < 2) return;
+
+            let maxVal = 1;
+            for (let s of dataSeries) {
+                let m = Math.max(...s);
+                if (m > maxVal) maxVal = m;
+            }
+
+            // Rysowanie siatki
+            cx.strokeStyle = '#334155';
+            cx.lineWidth = 0.5;
+            for (let i = 0; i <= 4; i++) {
+                let y = c.height - (i * (c.height / 4));
+                cx.beginPath(); cx.moveTo(0, y); cx.lineTo(c.width, y); cx.stroke();
+            }
+
+            // Rysowanie serii danych
+            dataSeries.forEach((series, idx) => {
+                cx.beginPath();
+                cx.strokeStyle = colors[idx];
+                cx.lineWidth = 1.8;
+
+                for (let i = 0; i < series.length; i++) {
+                    let x = (i / (maxHistory - 1)) * c.width;
+                    let y = c.height - ((series[i] / maxVal) * (c.height - 20)) - 10;
+                    if (i === 0) cx.moveTo(x, y);
+                    else cx.lineTo(x, y);
+                }
+                cx.stroke();
+            });
+        }
+
+        function updateUI() {
+            document.getElementById('stat-step').innerText = stepCount;
+            document.getElementById('stat-pop').innerText = replicators.length;
+            document.getElementById('stat-pred').innerText = replicators.filter(r => r.isPredator).length;
+            
+            let avgL = replicators.length > 0 ? (replicators.reduce((a, b) => a + b.length, 0) / replicators.length).toFixed(1) : 0;
+            document.getElementById('stat-len').innerText = avgL;
+
+            drawGrid();
+            drawChart('chartPop', [historyPop, historyPred], ['#f8fafc', '#ef4444']);
+            drawChart('chartEntropy', [historyEntropy, historyLen], ['#a855f7', '#f97316']);
+        }
+
+        // --- GŁÓWNA PĘTLA APLIKACJI ---
+        function loop() {
+            if (isRunning) {
+                for (let i = 0; i < stepsPerFrame; i++) {
+                    simulationStep();
+                }
+                updateUI();
+            }
+            requestAnimationFrame(loop);
+        }
+
+        // --- PODPIĘCIE INTERFEJSU (SLIDERY) ---
+        document.getElementById('param-mut').addEventListener('input', (e) => {
+            pMut = parseFloat(e.target.value);
+            document.getElementById('val-mut').innerText = Math.round(pMut * 100) + '%';
+        });
+
+        document.getElementById('param-inflow').addEventListener('input', (e) => {
+            inflow = parseInt(e.target.value);
+            document.getElementById('val-inflow').innerText = inflow;
+        });
+
+        document.getElementById('param-speed').addEventListener('input', (e) => {
+            stepsPerFrame = parseInt(e.target.value);
+            document.getElementById('val-speed').innerText = stepsPerFrame + 'x';
+        });
+
+        document.getElementById('btn-toggle').addEventListener('click', () => {
+            isRunning = !isRunning;
+        });
+
+        document.getElementById('btn-reset').addEventListener('click', () => {
+            initSimulation();
+            updateUI();
+        });
+
+        // Start
+        initSimulation();
+        loop();
+    </script>
+</body>
+</html>
